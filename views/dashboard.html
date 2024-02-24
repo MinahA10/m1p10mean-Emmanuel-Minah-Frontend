@@ -127,6 +127,8 @@
                       </div>
                       <div class="modal-body">
                         
+                      <div class="alert alert-danger" role="alert" ng-show="errorMessage">{{ errorMessage }}</div>
+                      <div class="alert alert-success" role="alert" ng-show="succesMessage">{{ succesMessage }}</div>
                         <div class="row">
                           <div class="col mb-3">
                             <label for="exampleFormControlSelect1" class="form-label">selectionnez des Services</label>
@@ -155,11 +157,11 @@
                           <div class="col mb-0">
                             <label for="dobBackdrop" class="form-label">Ajouter Date et Heure</label>
                             <input
-                            class="form-control"
-                            type="datetime-local"
-                            value="2021-06-18T12:30:00"
-                            id="html5-datetime-local-input" ng-model="selectedDateTime"/>
-                          </div>
+                                class="form-control"
+                                type="datetime-local"
+                                value="{{ selectedDateTime | date:'yyyy-MM-ddTHH:mm:ss.sssZ' }}"
+                                id="html5-datetime-local-input" ng-model="selectedDateTime"/>
+                        </div>
                         </div>
                       </div>
 

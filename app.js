@@ -69,8 +69,8 @@ app.controller('register',function ($window,$scope,$http) {
 });  
 
 app.controller('MainController', function($window,$scope,DataService,$http,$filter){
-    $scope.selectedDateTime = new Date();
-    $scope.selectedDateTime = $scope.selectedDateTime.toISOString();
+    
+    $scope.selectedDateTime = new Date().toISOString();
     
     DataService.getServices().then(function(response) {
         $scope.services = response.data;
@@ -78,7 +78,6 @@ app.controller('MainController', function($window,$scope,DataService,$http,$filt
         console.error('Erreur lors de la récupération des services : ', error);
     });
 
-    // Récupérer les employés
     DataService.getEmployees().then(function(response) {
         $scope.employees = response.data;
     }).catch(function(error) {
@@ -90,65 +89,70 @@ app.controller('MainController', function($window,$scope,DataService,$http,$filt
             var selectedEmployees = $scope.employees.filter(function(employee) {
                 return employee.selected;
             });
+
             var selectedServices = $scope.services.filter(function(service) {
                 return service.selected;
             });
 
-            var selectedDateTime = $filter('date')($scope.selectedDateTime, 'yyyy-MM-ddTHH:mm:ss.sssZ');;
-
+            const selectedDateTime = $scope.selectedDateTime;
+           
+            let formattedDate ='';
+            
+            if (selectedDateTime instanceof Date && !isNaN(selectedDateTime.getTime())) {
+                const originalDate = selectedDateTime;
+                const utcDate = new Date(originalDate.getTime() - originalDate.getTimezoneOffset() * 60000);
+                formattedDate = utcDate.toISOString();
+            } else {
+                console.error("selectedDateTime n'est pas une instance valide de Date :", selectedDateTime);
+                return; 
+            }
+            
             var verificationData = {
                 employeeId: selectedEmployees.map(employee => employee._id),
-                dateAppointment: selectedDateTime 
+                dateAppointment: formattedDate 
             };
-          
-            if (selectedDateTime instanceof Date && !isNaN(selectedDateTime)) {
-                // Si c'est le cas, vous pouvez appeler getTime() en toute sécurité
-                var originalDate = selectedDateTime;
-                var utcDate = new Date(originalDate.getTime() - originalDate.getTimezoneOffset() * 60000);
-                var formattedDate = utcDate.toISOString();
-                console.log(formattedDate);
-            } else {
-                // Gérer le cas où selectedDateTime n'est pas une instance valide de Date
-                console.error("selectedDateTime n'est pas une instance valide de Date :", selectedDateTime);
-                // Afficher un message d'erreur à l'utilisateur ou gérer l'erreur de manière appropriée
-            }
-            // Appel à la fonction de vérification de disponibilité de l'employé
-            // $http.post('http://localhost:3000/api/appointment/check-availability', verificationData)
-            //     .then(function(response) {
-            //         if (response.data.available) {
-                        
-            //             var requestData = {
-            //                 datetimeStart: selectedDateTime,
-            //                 services: selectedServices.map(service => service._id), 
-            //                 employee: selectedEmployees.map(employee => employee._id) 
-            //             };
+
         
-            //             var token = $window.localStorage.getItem("token");
+            $http.post('http://localhost:3000/api/appointment/check-availability', verificationData).then(function(response) {
+                    console.log(response);
+                if (response.data.available) {
+
+                        var requestData = {
+                            datetimeStart: formattedDate,
+                            services: selectedServices, 
+                            employee: selectedEmployees.map(employe => employe._id)
+                        };
         
-            //             var config = {
-            //                 headers: {
-            //                     'Authorization': 'Bearer ' + token
-            //                 }
-            //             };
+                        var token = $window.localStorage.getItem("token");
         
-            //             $http.post('http://localhost:3000/api/appointment/create', requestData, config)
-            //                 .then(function(response) {
-            //                     console.log("Données enregistrées avec succès :", response.data);
+                        var config = {
+                            headers: {
+                                'Authorization': 'Bearer ' + token
+                            }
+                        };
+        
+                        $http.post('http://localhost:3000/api/appointment/create', requestData, config)
+                            .then(function(response) {
+
+                                $scope.succesMessage = "Rendez vous enregistrer avec succès";
                                 
-            //                 })
-            //                 .catch(function(error) {
-            //                     console.error("Erreur lors de l'enregistrement des données :", error);
+                                console.log("Données enregistrées avec succès :", response.data);
                                 
-            //                 });
-            //         } else {
-                       
-            //             console.error("L'employé est occupé à ce moment.");
-                        
-            //         }
-            //     })
-            //     .catch(function(error) {
-            //         console.error("Erreur lors de la vérification de la disponibilité de l'employé :", error);
-            //     });
+                            })
+                            .catch(function(error) {
+                                console.error("Erreur lors de l'enregistrement des données :", error);
+                                
+                            });
+                } else {
+                    $scope.errorMessage = "L'employé est occupé à ce moment.";   
+                    console.error("L'employé est occupé à ce moment.");
+                    
+                }
+            })
+            .catch(function(error) {
+                $scope.errorMessage = "L'employé est occupé à ce moment.";
+                console.error("Erreur lors de la vérification de la disponibilité de l'employé :", error);
+            });     
     };
           
 });

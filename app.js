@@ -1,7 +1,13 @@
 var app = angular.module('myApp', ['ngRoute']);
 
 //Services
-app.service('DataService', function($http) {
+app.service('DataService', function($window,$http) {
+    var token = $window.localStorage.getItem("token");
+    var config = {
+        headers: {
+            'Authorization': 'Bearer ' + token
+        }
+    };
     this.getServices = function() {
         return $http.get('http://localhost:3000/api/service/list');
     };
@@ -9,6 +15,10 @@ app.service('DataService', function($http) {
     this.getEmployees = function() {
         return $http.get('http://localhost:3000/api/employe/list');
     };
+
+    this.getHistoriques =  function() {
+        return $http.get('http://localhost:3000/api/appointment/find',config);
+    }
 });
 
 //Controllers
@@ -68,7 +78,7 @@ app.controller('register',function ($window,$scope,$http) {
     }
 });  
 
-app.controller('MainController', function($window,$scope,DataService,$http,$filter){
+app.controller('MainController', function($window,$scope,DataService,$http){
     
     $scope.selectedDateTime = new Date().toISOString();
     
@@ -120,7 +130,7 @@ app.controller('MainController', function($window,$scope,DataService,$http,$filt
                         var requestData = {
                             datetimeStart: formattedDate,
                             services: selectedServices, 
-                            employee: selectedEmployees.map(employe => employe._id)
+                            employee: selectedEmployees
                         };
         
                         var token = $window.localStorage.getItem("token");
@@ -162,9 +172,90 @@ app.controller('HomeController', function($scope) {
     // HomeController logic goes here
 });
 
-app.controller('AboutController', function($scope) {
-    console.log("AboutController reached!");
-    // AboutController logic goes here
+app.controller('HistoriqueController', function($scope,DataService) {
+    
+    $scope.selectedDate = '';
+    $scope.itemsPerPage = 2; 
+    $scope.currentPage = 1; 
+    $scope.historiques = [];
+
+    DataService.getHistoriques().then(function(response) {
+        if (response && response.data && response.data.length) {
+            
+            $scope.historiques = response.data.sort(function(a, b) {
+                return new Date(b.datetimeStart) - new Date(a.datetimeStart);
+            });
+        }
+    }).catch(function(error) {
+        console.error('Erreur lors de la récupération des historiques : ', error);
+    });
+    //Pagination
+    
+
+    $scope.openModal = function(historique) {
+        $scope.selectedHistorique = historique;
+        $('#modalCenter').modal('show');
+    };
+
+    $scope.isStartDateTodayOrTomorrow = function(startDate) {
+        var currentDate = new Date();
+        var startDateObj = new Date(startDate);
+        var tomorrowDate = new Date(currentDate);
+        tomorrowDate.setDate(currentDate.getDate() + 1); 
+        return startDateObj.toDateString() === currentDate.toDateString() || startDateObj.toDateString() === tomorrowDate.toDateString();
+    };
+
+    $scope.isDateTimePassed = function(dateTime) {
+        var currentDateTime = new Date();
+        var targetDateTime = new Date(dateTime);
+        return targetDateTime < currentDateTime;
+    };
+
+    $scope.getCardClasses = function(dateTime) {
+        var classes = [];
+        if ($scope.isDateTimePassed(dateTime)) {
+            classes.push('bg-secondary'); 
+        } else if ($scope.isStartDateTodayOrTomorrow(dateTime)) {
+            classes.push('bg-warning'); 
+        } else {
+            classes.push(''); 
+        }
+        return classes;
+    };
+
+    
+
+
+    $scope.dateFilter = function(historique) {
+       
+        if (!$scope.selectedDate) {
+            return true; 
+        }
+        
+        var selectedDate = new Date($scope.selectedDate);
+       
+        var historiqueDate = new Date(historique.datetimeStart);
+        
+        return selectedDate.toDateString() === historiqueDate.toDateString();
+    };
+});
+
+
+app.controller('ServicesController', function($scope,$window,DataService) {
+    DataService.getServices().then(function(response) {
+        $scope.services = response.data;
+    }).catch(function(error) {
+        console.error('Erreur lors de la récupération des services : ', error);
+    });
+
+    $scope.selectedService = {}; 
+
+    $scope.openModal = function(service) {
+   
+    $scope.selectedService = service;
+    
+    $('#modalCenter').modal('show');
+    };
 });
 
 //function
@@ -178,9 +269,16 @@ function checkToken($window, $location) {
 //Route
 app.config(['$routeProvider', '$locationProvider', function($routeProvider, $locationProvider) {
     $routeProvider
-        .when('/', {
-            templateUrl: 'views/dashboard.html',
-            controller: 'MainController',
+        // .when('/', {
+        //     templateUrl: 'views/dashboard.html',
+        //     controller: 'MainController',
+        //     resolve: {
+        //         checkToken: checkToken
+        //     }
+        // })
+        .when('/services', {
+            templateUrl: 'views/services.html',
+            controller: 'ServicesController',
             resolve: {
                 checkToken: checkToken
             }
@@ -200,13 +298,14 @@ app.config(['$routeProvider', '$locationProvider', function($routeProvider, $loc
                 checkToken: checkToken
             }
         })
-        .when('/about', {
-            templateUrl: 'views/about.html',
-            controller: 'AboutController',
+        .when('/', {
+            templateUrl: 'views/historique.html',
+            controller: 'HistoriqueController',
             resolve: {
                 checkToken: checkToken
             }
         })
+        
         .otherwise({
             redirectTo: '/'
         });

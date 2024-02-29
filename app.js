@@ -21,8 +21,52 @@ app.service('DataService', function($window,$http) {
     }
 });
 
+app.service('AuthService', function($window) {
+    this.isAuthenticated = function() {
+        var token = $window.localStorage.getItem("token");
+        return token !== null; 
+    };
+});
+
+app.run(function($rootScope, $location, AuthService) {
+    $rootScope.$on('$routeChangeStart', function(event, next, current) {
+        
+        if (next && next.requireAuth && !AuthService.isAuthenticated()) {
+            $location.path('/login'); 
+        }
+    });
+});
+
+
 //Controllers
-app.controller('signin',function ($window,$scope,$http) {
+app.controller('MainController', ['$scope', 'AuthService', function($scope, AuthService) {
+    $scope.isAuthenticated = function() {
+        return AuthService.isAuthenticated();
+    };
+}]);
+
+app.controller('AccueilController',function($window,$scope,$http,$location,DataService){
+
+    DataService.getServices().then(function(response) {
+        $scope.services = response.data;
+    }).catch(function(error) {
+        console.error('Erreur lors de la récupération des services : ', error);
+    });
+
+    DataService.getEmployees().then(function(response) {
+        $scope.employees = response.data;
+       
+    }).catch(function(error) {
+        console.error('Erreur lors de la récupération des employés : ', error);
+    });
+
+    $scope.allerALogin = function() {
+        $window.location.href = '/login'; 
+    };
+
+});
+
+app.controller('loginController',function ($window,$scope,$http) {
     
     $scope.log=function(client){
         
@@ -37,7 +81,7 @@ app.controller('signin',function ($window,$scope,$http) {
                 if (res.status==200){
                     console.log(res);
                     $window.localStorage.setItem("token",res.data.token);
-                    $window.location.href = '/';
+                    $window.location.href = '/homepage';
                 }
                 else{
                     alert('Login incorrect   '+res.data.message);
@@ -50,7 +94,7 @@ app.controller('signin',function ($window,$scope,$http) {
     }
 });  
 
-app.controller('register',function ($window,$scope,$http) {
+app.controller('registerController',function ($window,$scope,$http) {
     
     $scope.reg=function(client){
         
@@ -78,7 +122,7 @@ app.controller('register',function ($window,$scope,$http) {
     }
 });  
 
-app.controller('MainController', function($window,$scope,DataService,$http){
+app.controller('HomeController', function($window,$scope,DataService,$http){
     
     $scope.selectedDateTime = new Date().toISOString();
     
@@ -167,10 +211,6 @@ app.controller('MainController', function($window,$scope,DataService,$http){
           
 });
 
-app.controller('HomeController', function($scope) {
-    console.log("HomeController reached!");
-    // HomeController logic goes here
-});
 
 app.controller('HistoriqueController', function($scope,DataService) {
     
@@ -190,7 +230,6 @@ app.controller('HistoriqueController', function($scope,DataService) {
         console.error('Erreur lors de la récupération des historiques : ', error);
     });
     //Pagination
-    
 
     $scope.openModal = function(historique) {
         $scope.selectedHistorique = historique;
@@ -222,9 +261,6 @@ app.controller('HistoriqueController', function($scope,DataService) {
         }
         return classes;
     };
-
-    
-
 
     $scope.dateFilter = function(historique) {
        
@@ -259,53 +295,36 @@ app.controller('ServicesController', function($scope,$window,DataService) {
 });
 
 //function
-function checkToken($window, $location) {
-    var token = $window.localStorage.getItem("token");
-    if (!token) {
-        $location.path('/login');
-    }
-}
 
 //Route
 app.config(['$routeProvider', '$locationProvider', function($routeProvider, $locationProvider) {
     $routeProvider
         // .when('/', {
-        //     templateUrl: 'views/dashboard.html',
-        //     controller: 'MainController',
-        //     resolve: {
-        //         checkToken: checkToken
-        //     }
+        //     templateUrl: 'accueil.html',
+        //     controller: 'AccueilController',
+        //     requireAuth: false // Route accessible aux utilisateurs non connectés
         // })
+        // .when('/register', {
+        //     templateUrl: 'register.html',
+        //     controller: 'registerController'
+        // })
+        // .when('/login', {
+        //     templateUrl: 'login.html',
+        //     controller: 'loginController'
+        // })
+        .when('/', {
+            templateUrl: 'dashboard.html', // Assurez-vous que cette route pointe vers la bonne page
+            controller: 'HomeController',
+            requireAuth: true // Route accessible uniquement aux utilisateurs connectés
+        })
         .when('/services', {
             templateUrl: 'views/services.html',
-            controller: 'ServicesController',
-            resolve: {
-                checkToken: checkToken
-            }
-        })
-        .when('/register',{
-            templateUrl: 'register.html',
-            controller: 'register'
-        })
-        .when('/login',{
-            templateUrl: 'login.html',
-            controller: 'register'
-        })
-        .when('/home', {
-            templateUrl: 'views/home.html',
-            controller: 'HomeController',
-            resolve: {
-                checkToken: checkToken
-            }
-        })
-        .when('/', {
+            controller: 'ServicesController'         
+        })     
+        .when('/historiques', {
             templateUrl: 'views/historique.html',
-            controller: 'HistoriqueController',
-            resolve: {
-                checkToken: checkToken
-            }
+            controller: 'HistoriqueController'
         })
-        
         .otherwise({
             redirectTo: '/'
         });

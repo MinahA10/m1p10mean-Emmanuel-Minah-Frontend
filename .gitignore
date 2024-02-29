@@ -1,0 +1,16 @@
+# Ignorer les fichiers de sauvegarde
+*~
+
+# Ignorer les fichiers de compilation
+*.o
+*.out
+*.exe
+
+# Ignorer les fichiers générés par l'environnement de développement
+.vscode/
+.idea/
+
+# Ignorer les fichiers de dépendances (si vous utilisez un gestionnaire de dépendances)
+node_modules/
+lib/node_modules/bootstrap-icons/
+lib/toastr.min.js

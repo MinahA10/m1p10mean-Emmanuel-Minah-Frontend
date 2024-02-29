@@ -1,0 +1,44 @@
+<div class="content-wrapper">
+  <!-- Content -->
+  <div class="container-xxl flex-grow-1 container-p-y">
+    <h4 class="py-3 mb-4"><span class="text-muted fw-light">Liste des toutes /</span> Services</h4>
+    <div class="row mb-5">
+      <div class="col-md-6 col-lg-4 mb-3" ng-repeat="service in services">
+        <div class="card h-100">
+          <img class="card-img-top" ng-src="{{service.images}}" alt="Card image cap" />
+          <div class="card-body">
+            <h5 class="card-title">{{ service.name }}</h5>
+            <p class="card-text">
+              Prix: {{ service.price }}
+            </p>
+            <p class="card-text">
+              Durée : {{ service.duration }}
+            </p>
+            <button type="button" class="btn btn-primary" ng-click="openModal(service)">Voir plus</button>
+             <!-- Modal -->
+             <div class="modal fade" id="modalCenter" tabindex="-1" aria-hidden="true">
+              <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="modalCenterTitle">{{ selectedService.name }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+                    <img class="card-img-top" ng-src="{{ selectedService.images }}" alt="Card image cap" />
+                    <p>Prix: {{ selectedService.price }}</p>
+                    <p>Durée : {{ selectedService.duration }}</p>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+          </div>
+        </div>
+      </div>
+    </div>
+</div>
+</div>

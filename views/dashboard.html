@@ -1,0 +1,186 @@
+<div class="content-wrapper">
+  <!-- Content -->
+
+  <div class="container-xxl flex-grow-1 container-p-y">
+    <h4 class="py-3 mb-4"><span class="text-muted fw-light">UI elements /</span> Collapse</h4>
+    <!-- Collapse -->
+    <h5>Collapse</h5>
+    <div class="row">
+      <div class="col-12">
+        <div class="card mb-4">
+          <h5 class="card-header">Basic</h5>
+          <div class="card-body">
+            <p class="card-text">
+              Toggle the visibility of content across your project with a few classes and our JavaScript
+              plugins.
+            </p>
+            <div class="row row-cols-1 row-cols-md-3 g-4 mb-5">
+              <div class="col">
+                <div class="card h-100">
+                  <img class="card-img-top" src="../assets/img/elements/2.jpg" alt="Card image cap" />
+                  <div class="card-body">
+                    <h5 class="card-title">Card title</h5>
+                    <p class="card-text">
+                      This is a longer card with supporting text below as a natural lead-in to additional content.
+                      This content is a little bit longer.
+                    </p>
+                  </div>
+                </div>
+              </div>
+  
+              <div class="col">
+                <div class="card h-100">
+                  <img class="card-img-top" src="../assets/img/elements/13.jpg" alt="Card image cap" />
+                  <div class="card-body">
+                    <h5 class="card-title">Card title</h5>
+                    <p class="card-text">
+                      This is a longer card with supporting text below as a natural lead-in to additional content.
+                      This content is a little bit longer.
+                    </p>
+                  </div>
+                </div>
+              </div>
+  
+              <div class="col">
+                <div class="card h-100">
+                  <img class="card-img-top" src="../assets/img/elements/4.jpg" alt="Card image cap" />
+                  <div class="card-body">
+                    <h5 class="card-title">Card title</h5>
+                    <p class="card-text">
+                      This is a longer card with supporting text below as a natural lead-in to additional content.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <div class="col-12">
+        <div class="card">
+          <h5 class="card-header">Multiple targets</h5>
+          <div class="card-body">
+            <p class="card-text">Show and hide multiple elements by referencing them with a selector.</p>
+
+            <div class="row row-cols-1 row-cols-md-3 g-4 mb-5">
+              <div class="col">
+                <div class="card h-100">
+                  <img class="card-img-top" src="../assets/img/elements/2.jpg" alt="Card image cap" />
+                  <div class="card-body">
+                    <h5 class="card-title">Card title</h5>
+                    <p class="card-text">
+                      This is a longer card with supporting text below as a natural lead-in to additional content.
+                      This content is a little bit longer.
+                    </p>
+                  </div>
+                </div>
+              </div>
+  
+              <div class="col">
+                <div class="card h-100">
+                  <img class="card-img-top" src="../assets/img/elements/13.jpg" alt="Card image cap" />
+                  <div class="card-body">
+                    <h5 class="card-title">Card title</h5>
+                    <p class="card-text">
+                      This is a longer card with supporting text below as a natural lead-in to additional content.
+                      This content is a little bit longer.
+                    </p>
+                  </div>
+                </div>
+              </div>
+  
+              <div class="col">
+                <div class="card h-100">
+                  <img class="card-img-top" src="../assets/img/elements/4.jpg" alt="Card image cap" />
+                  <div class="card-body">
+                    <h5 class="card-title">Card title</h5>
+                    <p class="card-text">
+                      This is a longer card with supporting text below as a natural lead-in to additional content.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+            </div>
+        
+            <div class="col-lg-4 col-md-3">
+              <div class="mt-3">
+                <!-- Button trigger modal -->
+                <button
+                    type="button"
+                    class="btn btn-primary"
+                    data-bs-toggle="modal"
+                    data-bs-target="#exLargeModal">
+                  <span class="tf-icons bx bx-plus-circle me-1"></span>creer un Rendez-vous
+                </button>
+
+                <!-- Modal -->
+                <div class="modal fade" id="exLargeModal" tabindex="-1" aria-hidden="true">
+                  <div class="modal-dialog modal-xl" role="document">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title" id="backDropModalTitle">Creer un rendez-vous</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <div class="modal-body">
+                        
+                      <div class="alert alert-danger" role="alert" ng-show="errorMessage">{{ errorMessage }}</div>
+                      <div class="alert alert-success" role="alert" ng-show="succesMessage">{{ succesMessage }}</div>
+                        <div class="row">
+                          <div class="col mb-3">
+                            <label for="exampleFormControlSelect1" class="form-label">selectionnez des Services</label>
+                            <div class="col-md">
+                              <div class="form-check form-check-inline mt-3" ng-repeat="service in services">
+                                  <input class="form-check-input" type="checkbox" id="service_{{$index}}" ng-model="service.selected" ng-true-value="'{{service._id}}'" ng-false-value="''">
+                                  <label class="form-check-label" for="service_{{$index}}">{{ service.name }}</label>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="row">
+                          <div class="col mb-3">
+                              <label class="form-label">Sélectionnez des employés</label>
+                              <div class="col-md">
+                                  <div class="form-check form-check-inline mt-3" ng-repeat="employee in employees">
+                                      <input class="form-check-input" type="checkbox" id="employee_{{$index}}" ng-model="employee.selected" ng-true-value="'{{employee._id}}'" ng-false-value="''">
+                                      <label class="form-check-label" for="employee_{{$index}}">{{ employee.firstName }} {{ employee.lastName }}</label>
+                                  </div>
+                              </div>
+                          </div>
+                        </div>
+
+                        <div class="row g-2">
+                          <div class="col mb-0">
+                            <label for="dobBackdrop" class="form-label">Ajouter Date et Heure</label>
+                            <input
+                                class="form-control"
+                                type="datetime-local"
+                                value="{{ selectedDateTime | date:'yyyy-MM-ddTHH:mm:ss.sssZ' }}"
+                                id="html5-datetime-local-input" ng-model="selectedDateTime"/>
+                        </div>
+                        </div>
+                      </div>
+
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                         Fermer
+                        </button>
+                        <button type="button" class="btn btn-primary" ng-click="saveData()">Enregistrer</button>
+                      </div>
+
+                    </form>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>

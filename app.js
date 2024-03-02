@@ -1,34 +1,82 @@
 var app = angular.module('myApp', ['ngRoute']);
-
+// const base_url='https://m1p11mean-emmanuel-minah-backend.onrender.com/api/';
+const base_url='http://localhost:3000/api/'
 //Services
 app.service('DataService', function($window,$http) {
-    var token = $window.localStorage.getItem("token");
-    var config = {
-        headers: {
-            'Authorization': 'Bearer ' + token
-        }
-    };
     this.getServices = function() {
-        return $http.get('http://localhost:3000/api/service/list');
+        return $http.get(base_url + 'service/list');
     };
 
     this.getEmployees = function() {
-        return $http.get('http://localhost:3000/api/employe/list');
+        return $http.get(base_url + 'employe/list');
     };
 
-    this.getHistoriques =  function() {
-        return $http.get('http://localhost:3000/api/appointment/find',config);
-    }
+    this.getHistoriques = function() {
+        var token = $window.localStorage.getItem("token");
+        var config = {
+            headers: {
+                'Authorization': 'Bearer ' + token
+            }
+        };
+        return $http.get(base_url + 'appointment/find', config);
+    };
 });
 
+app.service('AuthService', function($window) {
+    this.isAuthenticated = function() {
+        var token = $window.localStorage.getItem("token");
+        return token !== null; 
+    };
+});
+
+app.run(function($rootScope, $location, AuthService) {
+    $rootScope.$on('$routeChangeStart', function(event, next, current) {
+        
+        if (next && next.requireAuth && !AuthService.isAuthenticated()) {
+            $location.path('/login'); 
+        }
+    });
+});
+
+
 //Controllers
-app.controller('signin',function ($window,$scope,$http) {
+
+app.controller('AccueilController',function($window,$scope,$http,$location,DataService){
+
+    DataService.getServices()
+        .then(function(response) {
+            
+            $scope.services = response.data;
+        })
+        .catch(function(error) {
+            
+            console.error('Erreur lors de la récupération des services : ', error);
+        });
+
+    
+    DataService.getEmployees()
+        .then(function(response) {
+         
+            $scope.employees = response.data;
+        })
+        .catch(function(error) {
+           
+            console.error('Erreur lors de la récupération des employés : ', error);
+        });
+
+    $scope.allerALogin = function() {
+        $window.location.href = '/login'; 
+    };
+
+});
+
+app.controller('loginController',function ($window,$scope,$http) {
     
     $scope.log=function(client){
         
         $http({
             method:"POST",
-            url:'http://localhost:3000/api/auth/login',
+            url:base_url+'auth/login',
             data:client,
             dataType:'application/json'
         }).then(
@@ -37,7 +85,7 @@ app.controller('signin',function ($window,$scope,$http) {
                 if (res.status==200){
                     console.log(res);
                     $window.localStorage.setItem("token",res.data.token);
-                    $window.location.href = '/';
+                    $window.location.href = 'dashboard.html';
                 }
                 else{
                     alert('Login incorrect   '+res.data.message);
@@ -50,13 +98,13 @@ app.controller('signin',function ($window,$scope,$http) {
     }
 });  
 
-app.controller('register',function ($window,$scope,$http) {
+app.controller('registerController',function ($window,$scope,$http) {
     
     $scope.reg=function(client){
         
         $http({
             method:"POST",
-            url:'http://localhost:3000/api/auth/register',
+            url:base_url+'auth/register',
             data:client,
             dataType:'application/json'
         }).then(
@@ -78,10 +126,19 @@ app.controller('register',function ($window,$scope,$http) {
     }
 });  
 
-app.controller('MainController', function($window,$scope,DataService,$http){
+
+app.controller('users',function($window,$scope){
+    $scope.logout=function(){
+        $scope.token = $window.localStorage.removeItem("token");
+        $window.location.href = 'index.html';
+    }
+});
+
+
+app.controller('HomeController', function($window,$scope,DataService,$http){
     
-    $scope.selectedDateTime = new Date().toISOString();
-    
+    // $scope.selectedDateTime = new Date().toISOString();
+    $scope.selectedDateTime= new Date();
     DataService.getServices().then(function(response) {
         $scope.services = response.data;
     }).catch(function(error) {
@@ -94,8 +151,17 @@ app.controller('MainController', function($window,$scope,DataService,$http){
         console.error('Erreur lors de la récupération des employés : ', error);
     });
 
-    $scope.saveData = function() {
+    $scope.selectedService = {}; 
 
+    $scope.openModal = function(service) {
+   
+    $scope.selectedService = service;
+    
+    $('#modalCenter').modal('show');
+    };
+
+    $scope.saveData = function() {
+      
             var selectedEmployees = $scope.employees.filter(function(employee) {
                 return employee.selected;
             });
@@ -117,42 +183,43 @@ app.controller('MainController', function($window,$scope,DataService,$http){
                 return; 
             }
             
+            
             var verificationData = {
                 employeeId: selectedEmployees.map(employee => employee._id),
                 dateAppointment: formattedDate 
             };
 
+            
+            $http.post(base_url+'appointment/check-availability', verificationData).then(function(response) {
+                console.log(response);
+                if (response.status==200) {
+                  
+                        // var requestData = {
+                        //     datetimeStart: formattedDate,
+                        //     services: selectedServices, 
+                        //     employee: selectedEmployees
+                        // };
         
-            $http.post('http://localhost:3000/api/appointment/check-availability', verificationData).then(function(response) {
-                    console.log(response);
-                if (response.data.available) {
+                        // var token = $window.localStorage.getItem("token");
+        
+                        // var config = {
+                        //     headers: {
+                        //         'Authorization': 'Bearer ' + token
+                        //     }
+                        // };
+        
+                        // $http.post(base_url+'appointment/create', requestData, config)
+                        //     .then(function(response) {
 
-                        var requestData = {
-                            datetimeStart: formattedDate,
-                            services: selectedServices, 
-                            employee: selectedEmployees
-                        };
-        
-                        var token = $window.localStorage.getItem("token");
-        
-                        var config = {
-                            headers: {
-                                'Authorization': 'Bearer ' + token
-                            }
-                        };
-        
-                        $http.post('http://localhost:3000/api/appointment/create', requestData, config)
-                            .then(function(response) {
-
-                                $scope.succesMessage = "Rendez vous enregistrer avec succès";
+                        //         $scope.succesMessage = "Rendez vous enregistrer avec succès";
                                 
-                                console.log("Données enregistrées avec succès :", response.data);
+                        //         console.log("Données enregistrées avec succès :", response.data);
                                 
-                            })
-                            .catch(function(error) {
-                                console.error("Erreur lors de l'enregistrement des données :", error);
+                        //     })
+                        //     .catch(function(error) {
+                        //         console.error("Erreur lors de l'enregistrement des données :", error);
                                 
-                            });
+                        //     });
                 } else {
                     $scope.errorMessage = "L'employé est occupé à ce moment.";   
                     console.error("L'employé est occupé à ce moment.");
@@ -165,15 +232,6 @@ app.controller('MainController', function($window,$scope,DataService,$http){
             });     
     };
           
-});
-
-app.controller('HomeController', function($scope) {
-    console.log("HomeController reached!");
-    // HomeController logic goes here
-});
-
-app.controller('HistoriqueController', function($scope,DataService) {
-    
     $scope.selectedDate = '';
     $scope.itemsPerPage = 2; 
     $scope.currentPage = 1; 
@@ -190,7 +248,6 @@ app.controller('HistoriqueController', function($scope,DataService) {
         console.error('Erreur lors de la récupération des historiques : ', error);
     });
     //Pagination
-    
 
     $scope.openModal = function(historique) {
         $scope.selectedHistorique = historique;
@@ -223,9 +280,6 @@ app.controller('HistoriqueController', function($scope,DataService) {
         return classes;
     };
 
-    
-
-
     $scope.dateFilter = function(historique) {
        
         if (!$scope.selectedDate) {
@@ -238,74 +292,36 @@ app.controller('HistoriqueController', function($scope,DataService) {
         
         return selectedDate.toDateString() === historiqueDate.toDateString();
     };
-});
 
-
-app.controller('ServicesController', function($scope,$window,DataService) {
-    DataService.getServices().then(function(response) {
-        $scope.services = response.data;
-    }).catch(function(error) {
-        console.error('Erreur lors de la récupération des services : ', error);
-    });
-
-    $scope.selectedService = {}; 
-
-    $scope.openModal = function(service) {
-   
-    $scope.selectedService = service;
-    
-    $('#modalCenter').modal('show');
-    };
 });
 
 //function
-function checkToken($window, $location) {
-    var token = $window.localStorage.getItem("token");
-    if (!token) {
-        $location.path('/login');
-    }
-}
 
 //Route
 app.config(['$routeProvider', '$locationProvider', function($routeProvider, $locationProvider) {
     $routeProvider
-        // .when('/', {
-        //     templateUrl: 'views/dashboard.html',
-        //     controller: 'MainController',
-        //     resolve: {
-        //         checkToken: checkToken
-        //     }
-        // })
-        .when('/services', {
-            templateUrl: 'views/services.html',
-            controller: 'ServicesController',
-            resolve: {
-                checkToken: checkToken
-            }
-        })
-        .when('/register',{
-            templateUrl: 'register.html',
-            controller: 'register'
-        })
-        .when('/login',{
-            templateUrl: 'login.html',
-            controller: 'register'
-        })
-        .when('/home', {
-            templateUrl: 'views/home.html',
-            controller: 'HomeController',
-            resolve: {
-                checkToken: checkToken
-            }
-        })
         .when('/', {
-            templateUrl: 'views/historique.html',
-            controller: 'HistoriqueController',
-            resolve: {
-                checkToken: checkToken
-            }
+            templateUrl: 'index.html',
+            controller: 'AccueilController',
+            requireAuth: false 
         })
-        
+        .when('/login', {
+            templateUrl: 'login.html',
+            controller: 'loginController'
+        })
+        .when('/dash', {
+            templateUrl: 'dashboard.html', 
+            controller: 'HomeController',
+            requireAuth: true
+        })
+        // .when('/services', {
+        //     templateUrl: 'views/services.html',
+        //     controller: 'ServicesController'         
+        // })     
+        // .when('/historiques', {
+        //     templateUrl: 'views/historique.html',
+        //     controller: 'HistoriqueController'
+        // })
         .otherwise({
             redirectTo: '/'
         });
